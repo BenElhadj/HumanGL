@@ -3,56 +3,101 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <cmath>
-HumanGL::HumanGL() : animationTime(0.0f)
-{
+HumanGL::HumanGL() : animationTime(0.0f), leftArmAngle(0), rightArmAngle(0), leftLegAngle(0), rightLegAngle(0) {
     // Initialisation des matrices et transformations
 }
 HumanGL::~HumanGL() {}
+
 void HumanGL::draw() {
     matrixStack.push();
     drawTorso(); // Dessiner le torse
 
-    // Dessiner la tête attachée au torse
+    // Dessiner la tête
     matrixStack.push();
-    matrixStack.translate(0.0f, 1.2f, 0.0f); // Position de la tête par rapport au torse
+    matrixStack.translate(0.0f, 1.2f, 0.0f);
     drawHead();
     matrixStack.pop();
 
-    // Dessiner le bras gauche
+    // Bras gauche avec rotation
     matrixStack.push();
-    matrixStack.translate(-0.6f, 0.9f, 0.0f); // Position du bras gauche par rapport au torse
+    matrixStack.translate(-0.6f, 0.9f, 0.0f);
+    matrixStack.rotate(leftArmAngle, 1.0f, 0.0f, 0.0f);
     drawArm(true);
     matrixStack.pop();
 
-    // Dessiner le bras droit
+    // Bras droit avec rotation
     matrixStack.push();
-    matrixStack.translate(0.6f, 0.9f, 0.0f); // Position du bras droit par rapport au torse
+    matrixStack.translate(0.6f, 0.9f, 0.0f);
+    matrixStack.rotate(rightArmAngle, 1.0f, 0.0f, 0.0f);
     drawArm(false);
     matrixStack.pop();
 
-    // Dessiner la jambe gauche
+    // Jambe gauche avec rotation
     matrixStack.push();
-    matrixStack.translate(-0.3f, -1.0f, 0.0f); // Position de la jambe gauche par rapport au torse
+    matrixStack.translate(-0.3f, -1.0f, 0.0f);
+    matrixStack.rotate(leftLegAngle, 1.0f, 0.0f, 0.0f);
     drawLeg(true);
     matrixStack.pop();
 
-    // Dessiner la jambe droite
+    // Jambe droite avec rotation
     matrixStack.push();
-    matrixStack.translate(0.3f, -1.0f, 0.0f); // Position de la jambe droite par rapport au torse
+    matrixStack.translate(0.3f, -1.0f, 0.0f);
+    matrixStack.rotate(rightLegAngle, 1.0f, 0.0f, 0.0f);
     drawLeg(false);
     matrixStack.pop();
 
     matrixStack.pop(); // Fin du torse
 }
+
 void HumanGL::drawPart()
 {
+    glPushMatrix(); // Sauvegarde de la transformation actuelle
+
+    // Appliquer la transformation de `matrixStack` à OpenGL
+    glMultMatrixf(matrixStack.getData().data());
+
+    std::cout << "Applying Transformation Matrix: ";
+    for (float value : matrixStack.getData()) {
+        std::cout << value << " ";
+    }
+    std::cout << std::endl;
+
+    // Dessiner un cube (corps, tête, bras, etc.)
     glBegin(GL_QUADS);
     glVertex3f(-0.5f, -0.5f, -0.5f);
     glVertex3f(0.5f, -0.5f, -0.5f);
     glVertex3f(0.5f, 0.5f, -0.5f);
     glVertex3f(-0.5f, 0.5f, -0.5f);
+
+    glVertex3f(-0.5f, -0.5f, 0.5f);
+    glVertex3f(0.5f, -0.5f, 0.5f);
+    glVertex3f(0.5f, 0.5f, 0.5f);
+    glVertex3f(-0.5f, 0.5f, 0.5f);
+
+    glVertex3f(-0.5f, -0.5f, -0.5f);
+    glVertex3f(-0.5f, -0.5f, 0.5f);
+    glVertex3f(-0.5f, 0.5f, 0.5f);
+    glVertex3f(-0.5f, 0.5f, -0.5f);
+
+    glVertex3f(0.5f, -0.5f, -0.5f);
+    glVertex3f(0.5f, -0.5f, 0.5f);
+    glVertex3f(0.5f, 0.5f, 0.5f);
+    glVertex3f(0.5f, 0.5f, -0.5f);
+
+    glVertex3f(-0.5f, -0.5f, -0.5f);
+    glVertex3f(0.5f, -0.5f, -0.5f);
+    glVertex3f(0.5f, -0.5f, 0.5f);
+    glVertex3f(-0.5f, -0.5f, 0.5f);
+
+    glVertex3f(-0.5f, 0.5f, -0.5f);
+    glVertex3f(0.5f, 0.5f, -0.5f);
+    glVertex3f(0.5f, 0.5f, 0.5f);
+    glVertex3f(-0.5f, 0.5f, 0.5f);
     glEnd();
+
+    glPopMatrix(); // Restaurer l'ancienne transformation
 }
+
 void HumanGL::drawArm(bool isLeft) {
     drawUpperArm(isLeft); // Dessiner le bras supérieur
 
@@ -112,32 +157,8 @@ void HumanGL::drawThigh(bool isLeft)
 void HumanGL::update() {
     animationTime += 0.1f;
     float angle = sin(animationTime) * 30.0f;
-
-    // Mouvement du bras gauche
-    matrixStack.push();
-    matrixStack.translate(-0.6f, 0.9f, 0.0f); // Position initiale du bras gauche
-    matrixStack.rotate(angle, 1.0f, 0.0f, 0.0f); // Rotation du bras gauche
-    drawArm(true);
-    matrixStack.pop();
-
-    // Mouvement du bras droit
-    matrixStack.push();
-    matrixStack.translate(0.6f, 0.9f, 0.0f); // Position initiale du bras droit
-    matrixStack.rotate(-angle, 1.0f, 0.0f, 0.0f); // Rotation du bras droit
-    drawArm(false);
-    matrixStack.pop();
-
-    // Mouvement de la jambe gauche
-    matrixStack.push();
-    matrixStack.translate(-0.3f, -1.0f, 0.0f); // Position initiale de la jambe gauche
-    matrixStack.rotate(-angle, 1.0f, 0.0f, 0.0f); // Rotation de la jambe gauche
-    drawLeg(true);
-    matrixStack.pop();
-
-    // Mouvement de la jambe droite
-    matrixStack.push();
-    matrixStack.translate(0.3f, -1.0f, 0.0f); // Position initiale de la jambe droite
-    matrixStack.rotate(angle, 1.0f, 0.0f, 0.0f); // Rotation de la jambe droite
-    drawLeg(false);
-    matrixStack.pop();
+    leftArmAngle = angle;
+    rightArmAngle = -angle;
+    leftLegAngle = -angle;   // Rotation opposée pour les jambes
+    rightLegAngle = angle;
 }

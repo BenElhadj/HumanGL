@@ -9,6 +9,10 @@ public:
     float torsoScaleFactor = 1.0f;
     float armScaleFactor = 1.0f;
     float legScaleFactor = 1.0f;
+    float leftArmAngle;
+    float rightArmAngle;
+    float leftLegAngle;
+    float rightLegAngle;
     HumanGL();
     ~HumanGL();
     void draw();
