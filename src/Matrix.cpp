@@ -1,5 +1,6 @@
 #include "Matrix.hpp"
 #include <vector>
+#include <iostream>
 #include <stack>
 #include <cmath>
 Matrix::Matrix()
@@ -13,15 +14,23 @@ void Matrix::loadIdentity()
                      0, 0, 1, 0,
                      0, 0, 0, 1};
 }
-void Matrix::translate(float x, float y, float z)
-{
+void Matrix::translate(float x, float y, float z) {
+    std::cout << "TRANSLATE: (" << x << ", " << y << ", " << z << ")" << std::endl;
     Matrix translationMatrix;
-    translationMatrix.currentMatrix = {1, 0, 0, x,
-                                       0, 1, 0, y,
-                                       0, 0, 1, z,
-                                       0, 0, 0, 1};
+    translationMatrix.currentMatrix = {
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        x, y, z, 1  // Colonne 3 (indices 12,13,14)
+    };
     multiply(translationMatrix);
+    std::cout << "New Transformation Matrix: ";
+    for (float value : currentMatrix) {
+        std::cout << value << " ";
+    }
+    std::cout << std::endl;
 }
+
 void Matrix::rotate(float angle, float x, float y, float z) {
     float c = cos(angle);
     float s = sin(angle);
@@ -35,13 +44,14 @@ void Matrix::rotate(float angle, float x, float y, float z) {
                                      0, 0, 0, 1 };
     multiply(rotationMatrix);
 }
-void Matrix::scale(float x, float y, float z)
-{
+void Matrix::scale(float x, float y, float z) {
     Matrix scaleMatrix;
-    scaleMatrix.currentMatrix = {x, 0, 0, 0,
-                                 0, y, 0, 0,
-                                 0, 0, z, 0,
-                                 0, 0, 0, 1};
+    scaleMatrix.currentMatrix = {
+        x, 0, 0, 0,
+        0, y, 0, 0,
+        0, 0, z, 0,
+        0, 0, 0, 1
+    };
     multiply(scaleMatrix);
 }
 void Matrix::multiply(const Matrix& other) {
@@ -51,10 +61,12 @@ void Matrix::multiply(const Matrix& other) {
             for (int k = 0; k < 4; ++k)
                 result[i * 4 + j] += currentMatrix[i * 4 + k] * other.currentMatrix[k * 4 + j];
     currentMatrix = result;
+    std::cout << "Matrix Multiplication Applied" << std::endl;
 }
 void Matrix::push()
 {
     stack.push_back(currentMatrix);
+    std::cout << "PUSH: Stack size = " << stack.size() << std::endl;
 }
 void Matrix::pop()
 {
@@ -62,6 +74,11 @@ void Matrix::pop()
     {
         currentMatrix = stack.back();
         stack.pop_back();
+        std::cout << "POP: Stack size = " << stack.size() << std::endl;
+    }
+    else
+    {
+        std::cerr << "Error: pop() called on an empty stack" << std::endl; 
     }
 }
 const std::vector<float> &Matrix::getData() const
