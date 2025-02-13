@@ -21,8 +21,10 @@ EXEC = HumanGL
 # Définition des bibliothèques et includes selon l'OS
 ifeq ($(UNAME), Linux)
     CXXFLAGS += -I$(LIB_GLEW)/include -I$(LIB_GLM)
-	LDFLAGS = -L$(LIB_GLEW)/lib -lGLEW -lGL -lglfw -lpthread -ldl -static-libgcc -static-libstdc++
+	LDFLAGS = -L$(LIB_GLEW)/lib -Wl,-Bstatic -lGLEW -Wl,-Bdynamic -lGL -lGLU -lglfw -lpthread -ldl -static-libgcc -static-libstdc++
 
+
+# LDFLAGS = -L$(LIB_GLEW)/lib -lGLEW -lGL -lglfw -lpthread -ldl -static-libgcc -static-libstdc++
 else
     CXXFLAGS += -I$(LIB_GLEW)/include -I$(LIB_GLM)
     LDFLAGS = -lglew32 -lopengl32 -lglfw3
@@ -40,3 +42,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 # Nettoyage
 clean:
 	rm -rf $(OBJ_DIR) $(EXEC)
+
+# Recompilation complète
+re: clean $(EXEC)
