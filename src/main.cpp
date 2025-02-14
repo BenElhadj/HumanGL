@@ -1,66 +1,144 @@
-#include "HumanGL.hpp"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
+#include "BodyParts.hpp"
+#include "Camera.hpp"
+#include "Movement.hpp"
+
+// Variables globales
+Camera camera;
+MovementController movementCtrl;
+// Character character;
+GLuint shaderProgram;
+float lastFrame = 0.0f;
+
+// Shaders simples (à intégrer dans des fichiers séparés en production)
+const char* vertexShaderSource = R"(
+    #version 330 core
+    layout (location = 0) in vec3 aPos;
+    layout (location = 1) in vec3 aNormal;
+    
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
+    
+    void main() {
+        gl_Position = projection * view * model * vec4(aPos, 1.0);
+    }
+)";
+
+const char* fragmentShaderSource = R"(
+    #version 330 core
+    uniform vec3 objectColor;
+    out vec4 FragColor;
+    
+    void main() {
+        FragColor = vec4(objectColor, 1.0);
+    }
+)";
+
+// Callback clavier
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     (void)scancode;
     (void)mods;
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-}
-int main()
-{
-    if (!glfwInit())
-    {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        switch(key) {
+            case GLFW_KEY_LEFT:     camera.moveHorizontal(-0.05f);                 break;
+            case GLFW_KEY_RIGHT:    camera.moveHorizontal(0.05f);                  break;
+            case GLFW_KEY_DOWN:     camera.moveVertical(0.05f);                    break;
+            case GLFW_KEY_UP:       camera.moveVertical(-0.05f);                   break;
+            case GLFW_KEY_A:        camera.zoomIn();                               break;
+            case GLFW_KEY_R:        camera.zoomOut();                              break;
+            case GLFW_KEY_S:        movementCtrl.setSpeed(0.5f);                   break;
+            case GLFW_KEY_F:        movementCtrl.setSpeed(2.0f);                   break;
+            case GLFW_KEY_W:        movementCtrl.toggleWalk();                     break;
+            case GLFW_KEY_J:        movementCtrl.triggerJump();                    break;
+            case GLFW_KEY_SPACE:    movementCtrl.stopAll();                        break;
+            case GLFW_KEY_ESCAPE:   glfwSetWindowShouldClose(window, GL_TRUE);     break;
+        }
     }
-    // ...
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    GLFWwindow *window = glfwCreateWindow(800, 600, "HumanGL", NULL, NULL); // <-- UNE SEULE LIGNE
-    // ...
-    if (!window)
-    {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+}
+
+// Initialisation des shaders
+GLuint compileShaders() {
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+    return program;
+}
+
+int main() {
+    // Initialisation GLFW
+    if (!glfwInit()) return -1;
+
+    // Création fenêtre
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "HumanGL", NULL, NULL);
+    if (!window) {
         glfwTerminate();
         return -1;
     }
-
     glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, keyCallback);
+
+    // Initialisation GLEW
     glewExperimental = GL_TRUE;
-    if (glewInit() != GLEW_OK)
-    {
-        std::cerr << "Failed to initialize GLEW" << std::endl;
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Erreur GLEW" << std::endl;
         return -1;
     }
+
+    // Création du personnage
+    Character character;
+
+    // Configuration OpenGL
     glEnable(GL_DEPTH_TEST);
+    shaderProgram = compileShaders();
+    glUseProgram(shaderProgram);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45.0, 800.0 / 600.0, 0.1, 100.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(0.0, 2.0, 8.0,  // Position plus haute et plus éloignée
-            0.0, 0.0, 0.0,  // Regarde toujours vers le centre
-            0.0, 1.0, 0.0); // Orientation normale
+    // Matrice de projection
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1280.0f/720.0f, 0.1f, 100.0f);
+    GLuint projLoc = glGetUniformLocation(shaderProgram, "projection");
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, &projection[0][0]);
 
+    // Boucle principale
+    while (!glfwWindowShouldClose(window)) {
+        // Calcul deltaTime
+        float currentFrame = glfwGetTime();
+        float deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-    glViewport(0, 0, 800, 600);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glfwSetKeyCallback(window, key_callback);
-    HumanGL humanGL;
-    while (!glfwWindowShouldClose(window))
-    {
+        // Nettoyage écran
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        humanGL.draw();
-        humanGL.update();
+
+        // Mise à jour des composants
+        movementCtrl.update(deltaTime, character);
+
+        // Rendu
+        glm::mat4 view = camera.getViewMatrix();
+        GLuint viewLoc = glGetUniformLocation(shaderProgram, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+
+        character.draw(shaderProgram);
+
+        // Swap buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
     glfwTerminate();
     return 0;
 }

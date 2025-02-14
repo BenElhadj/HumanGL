@@ -1,47 +1,39 @@
-# Détection de l'OS
+# Détection OS
 UNAME := $(shell uname)
 
 # Compilateur
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -O3
+CXXFLAGS = -std=c++11 -Wall -Wextra -O3 -I./libs/glm -I./libs/glew/include
 
 # Dossiers
 SRC_DIR = src
 OBJ_DIR = obj
-LIB_GLEW = libs/glew
-LIB_GLM = libs/glm  # Correction : GLM se trouve dans libs/glm
+EXEC = HumanGL
 
-# Fichiers sources et objets
+# Fichiers sources
 SRC = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC))
 
-# Nom de l'exécutable
-EXEC = HumanGL
-
-# Définition des bibliothèques et includes selon l'OS
+# Configuration des libs
 ifeq ($(UNAME), Linux)
-    CXXFLAGS += -I$(LIB_GLEW)/include -I$(LIB_GLM)
-	LDFLAGS = -L$(LIB_GLEW)/lib -Wl,-Bstatic -lGLEW -Wl,-Bdynamic -lGL -lGLU -lglfw -lpthread -ldl -static-libgcc -static-libstdc++
-
-
-# LDFLAGS = -L$(LIB_GLEW)/lib -lGLEW -lGL -lglfw -lpthread -ldl -static-libgcc -static-libstdc++
+    # Linux/WSL
+    LDFLAGS = -lGL -lGLU -lglfw -lGLEW
 else
-    CXXFLAGS += -I$(LIB_GLEW)/include -I$(LIB_GLM)
-    LDFLAGS = -lglew32 -lopengl32 -lglfw3
+    # Windows (MinGW)
+    LDFLAGS = -L./libs/glfw/lib-mingw -lglfw3 -lgdi32 -lglew32 -lopengl32
 endif
 
-# Compilation de l'exécutable
+# Règles de compilation
 $(EXEC): $(OBJ)
 	$(CXX) $^ -o $@ $(LDFLAGS)
 
-# Compilation des fichiers objets
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Nettoyage
 clean:
 	rm -rf $(OBJ_DIR) $(EXEC)
 
-# Recompilation complète
 re: clean $(EXEC)
+
+.PHONY: clean re
