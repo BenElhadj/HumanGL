@@ -6,7 +6,7 @@
 
 class Camera {
 private:
-    float radius = 5.0f;    // Distance initiale
+    float radius = 8.0f;    // Distance initiale
     float theta = 0.0f;     // Angle horizontal (radians)
     float phi = glm::radians(45.0f); // Angle vertical (radians)
     glm::vec3 center = glm::vec3(0.0f); // Centre de rotation

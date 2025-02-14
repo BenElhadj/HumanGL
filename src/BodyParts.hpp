@@ -111,8 +111,8 @@ private:
     BodyPart *torso, *head;
     BodyPart *upperArmL, *forearmL, *upperArmR, *forearmR;
     BodyPart *thighL, *calfL, *thighR, *calfR;
-    float walkAngle = 0.0f;
-    bool isWalking = false;
+    // float walkAngle = 0.0f;
+    // bool isWalking = false;
 
     void buildSkeleton();
 
@@ -120,11 +120,24 @@ public:
     Character();
     ~Character();
     void draw(GLuint shaderProgram) const;
+
+    // Getters pour les parties du corps
+
+    BodyPart* getTorso() const { return torso; }
+    BodyPart* getUpperArmL() const { return upperArmL; }
+    BodyPart* getUpperArmR() const { return upperArmR; }
+    BodyPart* getThighL() const { return thighL; }
+    BodyPart* getThighR() const { return thighR; }
+
+    void applyArmRotation(float angle);
+    void applyLegRotation(float angle);
+    void applyJump(float height);
+    void resetTorsoPosition();
     void animateWalk(float deltaTime);
-    void toggleWalk() { isWalking = !isWalking; }
-    void animateJump(float jumpHeight);
-    void setWalking(bool state);
-    void resetAnimations(); 
+    // void toggleWalk() { isWalking = !isWalking; }
+    // void animateJump(float jumpHeight);
+    // void setWalking(bool state);
+    // void resetAnimations(); 
 };
 
 #endif

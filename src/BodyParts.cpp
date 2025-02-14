@@ -89,34 +89,34 @@ void Character::draw(GLuint shaderProgram) const {
     torso->draw(glm::mat4(1.0f), shaderProgram);
 }
 
-void Character::setWalking(bool state) {
-    isWalking = state; if (!state) walkAngle = 0.0f; 
-}
-void Character::animateWalk(float deltaTime) {
+// void Character::setWalking(bool state) {
+//     isWalking = state; if (!state) walkAngle = 0.0f; 
+// }
+// void Character::animateWalk(float deltaTime) {
 
-    if (!isWalking) return;
+//     if (!isWalking) return;
 
-    walkAngle += deltaTime * 10.0f;
+//     walkAngle += deltaTime * 10.0f;
 
-    float armRotation = sin(walkAngle) * 45.0f;
-    float legRotation = cos(walkAngle) * 45.0f;
+//     float armRotation = sin(walkAngle) * 45.0f;
+//     float legRotation = cos(walkAngle) * 45.0f;
 
-    // Animation des bras
-    upperArmL->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(armRotation), glm::vec3(1, 0, 0)));
-    upperArmR->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(-armRotation), glm::vec3(1, 0, 0)));
+//     // Animation des bras
+//     upperArmL->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(armRotation), glm::vec3(1, 0, 0)));
+//     upperArmR->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(-armRotation), glm::vec3(1, 0, 0)));
 
-    // Animation des jambes
-    thighL->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(legRotation), glm::vec3(1, 0, 0)));
-    thighR->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(-legRotation), glm::vec3(1, 0, 0)));
-}
+//     // Animation des jambes
+//     thighL->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(legRotation), glm::vec3(1, 0, 0)));
+//     thighR->updateTransform(glm::rotate(glm::mat4(1.0f), glm::radians(-legRotation), glm::vec3(1, 0, 0)));
+// }
 
-void Character::animateJump(float jumpHeight) {
-    glm::mat4 jumpTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0, jumpHeight, 0));
-    torso->updateTransform(jumpTransform);
-}
+// void Character::animateJump(float jumpHeight) {
+//     glm::mat4 jumpTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0, jumpHeight, 0));
+//     torso->updateTransform(jumpTransform);
+// }
 
-void Character::resetAnimations() {
-    torso->updateTransform(glm::mat4(1.0f));
-    walkAngle = 0.0f;
-    isWalking = false;
-}
+// void Character::resetAnimations() {
+//     torso->updateTransform(glm::mat4(1.0f));
+//     walkAngle = 0.0f;
+//     isWalking = false;
+// }

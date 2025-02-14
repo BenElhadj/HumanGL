@@ -8,7 +8,8 @@
 
 // Variables globales
 Camera camera;
-MovementController movementCtrl;
+// MovementController movementCtrl;
+MovementController* movementCtrl = nullptr;
 // Character character;
 GLuint shaderProgram;
 float lastFrame = 0.0f;
@@ -50,11 +51,11 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_UP:       camera.moveVertical(-0.05f);                   break;
             case GLFW_KEY_A:        camera.zoomIn();                               break;
             case GLFW_KEY_R:        camera.zoomOut();                              break;
-            case GLFW_KEY_S:        movementCtrl.setSpeed(0.5f);                   break;
-            case GLFW_KEY_F:        movementCtrl.setSpeed(2.0f);                   break;
-            case GLFW_KEY_W:        movementCtrl.toggleWalk();                     break;
-            case GLFW_KEY_J:        movementCtrl.triggerJump();                    break;
-            case GLFW_KEY_SPACE:    movementCtrl.stopAll();                        break;
+            case GLFW_KEY_S:        movementCtrl->adjustSpeed(0.9f);                break;
+            case GLFW_KEY_F:        movementCtrl->adjustSpeed(1.1f);                break;
+            case GLFW_KEY_W:        movementCtrl->toggleWalk();                     break;
+            case GLFW_KEY_J:        movementCtrl->triggerJump();                    break;
+            case GLFW_KEY_SPACE:    movementCtrl->stopAll();                        break;
             case GLFW_KEY_ESCAPE:   glfwSetWindowShouldClose(window, GL_TRUE);     break;
         }
     }
@@ -102,6 +103,7 @@ int main() {
 
     // Création du personnage
     Character character;
+    movementCtrl = new MovementController(character);
 
     // Configuration OpenGL
     glEnable(GL_DEPTH_TEST);
@@ -125,7 +127,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Mise à jour des composants
-        movementCtrl.update(deltaTime, character);
+        movementCtrl->update(deltaTime);
 
         // Rendu
         glm::mat4 view = camera.getViewMatrix();
@@ -138,7 +140,8 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
+    
+    delete movementCtrl;
     glfwTerminate();
     return 0;
 }
