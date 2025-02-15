@@ -51,11 +51,11 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_UP:       camera.moveVertical(-0.05f);                   break;
             case GLFW_KEY_A:        camera.zoomIn();                               break;
             case GLFW_KEY_R:        camera.zoomOut();                              break;
-            case GLFW_KEY_S:        movementCtrl->adjustSpeed(0.9f);                break;
-            case GLFW_KEY_F:        movementCtrl->adjustSpeed(1.1f);                break;
-            case GLFW_KEY_W:        movementCtrl->toggleWalk();                     break;
-            case GLFW_KEY_J:        movementCtrl->triggerJump();                    break;
-            case GLFW_KEY_SPACE:    movementCtrl->stopAll();                        break;
+            case GLFW_KEY_S:        movementCtrl->adjustSpeed(0.9f);               break;
+            case GLFW_KEY_F:        movementCtrl->adjustSpeed(1.1f);               break;
+            case GLFW_KEY_W:        movementCtrl->toggleWalk();                    break;
+            case GLFW_KEY_J:        movementCtrl->triggerJump();                   break;
+            case GLFW_KEY_SPACE:    movementCtrl->stopAll();                       break;
             case GLFW_KEY_ESCAPE:   glfwSetWindowShouldClose(window, GL_TRUE);     break;
         }
     }

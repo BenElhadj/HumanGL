@@ -2,48 +2,21 @@
 #include "BodyParts.hpp"
 #include <cmath>
 
-void MovementController::triggerJump() {
-    if (!isJumping) {
-        isJumping = true;
-        jumpProgress = 0.0f;
-    }
+void MovementController::stopAll() {
+    currentState = IDLE;
+    pendingJump = false;
+    pendingWalk = false;
+    walkAngle = 0.0f;
+    character.getTorso()->updateTransform(glm::mat4(1.0f));
 }
+
 
 void MovementController::adjustSpeed(float factor) {
     animationSpeed = glm::clamp(animationSpeed * factor, MIN_SPEED, MAX_SPEED);
 }
 
-void MovementController::toggleWalk() { 
-    isWalking = !isWalking; 
-}
-
-// void MovementController::update(float deltaTime) {
-//     float adjustedDelta = deltaTime * animationSpeed;
-
-//     // Gestion de la marche
-//     if (isWalking) {
-//         animateWalk(adjustedDelta);
-//     }
-
-//     // Gestion du saut (trajectoire parabolique avec sinus)
-//     if (isJumping) {
-//         jumpTimer += adjustedDelta * 2.5f; // Vitesse de saut
-        
-//         // Hauteur du saut : y = sin(jumpTimer) * amplitude
-//         float jumpHeight = sin(jumpTimer) * 1.5f;
-//         animateJump(jumpHeight);
-
-//         // Fin du saut après une demi-période (π radians)
-//         if (jumpTimer >= glm::pi<float>()) {
-//             isJumping = false;
-//             jumpTimer = 0.0f;
-//             resetAnimations();
-//         }
-//     }
-// }
-
 void MovementController::animateWalk(float deltaTime) {
-    if (!isWalking) return;
+    if (currentState != WALKING && currentState != STOPPING) return;
 
     walkAngle += deltaTime * 10.0f;
     float armRotation = sin(walkAngle) * 45.0f;
@@ -59,30 +32,112 @@ void MovementController::animateWalk(float deltaTime) {
 }
 
 void MovementController::animateJump(float jumpHeight) {
+    float adjustedHeight = jumpHeight;
+    if (jumpTimer > glm::pi<float>()/2) {
+        adjustedHeight *= 1.0f - (jumpTimer - glm::pi<float>()/2)/(glm::pi<float>()/2);
+    }
     glm::mat4 jumpTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0, jumpHeight, 0));
     character.getTorso()->updateTransform(jumpTransform);
 }
 
 void MovementController::resetAnimations() {
-    character.getTorso()->updateTransform(glm::mat4(1.0f));
-    walkAngle = 0.0f;
-    isWalking = false;
-    isJumping = false;
+    // Réinitialisation progressive des angles
+    if (walkAngle > 0.1f) {
+        walkAngle *= 0.9f; // Décélération douce
+    } else {
+        character.getTorso()->updateTransform(glm::mat4(1.0f));
+        walkAngle = 0.0f;
+    }
+}
+
+void MovementController::toggleWalk() {
+    inWalk = !inWalk;
+    switch(this->currentState) {
+        case IDLE:
+            currentState = WALKING;
+            walkAngle = 0.0f;
+            break;
+            
+        case WALKING:
+            currentState = STOPPING;
+            break;
+            
+        case JUMPING:
+            pendingWalk = true;
+            break;
+            
+        case STOPPING:
+            break;
+    }
+}
+
+void MovementController::triggerJump() {
+    currentState == JUMPING ? ((savedJumpTimer = jumpTimer) && (jumpPaused = true)) : jumpPaused = false;
+    switch(currentState) {
+        case IDLE:
+            currentState = JUMPING;
+            jumpTimer = 0.0f;
+            break;
+            
+        case WALKING:
+            currentState = STOPPING;
+            pendingJump = true;
+            break;
+            
+        case JUMPING:
+            currentState = IDLE;
+            character.getTorso()->updateTransform(glm::mat4(1.0f));
+            jumpTimer = jumpPaused ? jumpTimer : glm::pi<float>();
+            break;
+            
+        case STOPPING:
+            pendingJump = true;
+            break;
+    }
 }
 
 void MovementController::update(float deltaTime) {
     float adjustedDelta = deltaTime * animationSpeed;
 
-    if (isWalking) {
-        animateWalk(adjustedDelta);
-    }
+    switch(currentState) {
+        case WALKING:
+            animateWalk(adjustedDelta);
+            break;
 
-    if (isJumping) {
-        jumpTimer += adjustedDelta * 2.5f;
-        animateJump(sin(jumpTimer) * 1.5f);
-        
-        if (jumpTimer >= glm::pi<float>()) {
-            resetAnimations();
+        case JUMPING: {
+            if (jumpPaused) break;
+
+            jumpTimer += adjustedDelta * 2.5f;
+            float height = sin(jumpTimer) * 1.5f;
+            animateJump(height);
+            
+            if (jumpTimer >= glm::pi<float>()) {
+                currentState = IDLE;
+                character.getTorso()->updateTransform(glm::mat4(1.0f));
+                if (pendingWalk) {
+                    currentState = WALKING;
+                    pendingWalk = false;
+                }
+                currentState = (inWalk ? WALKING : currentState);
+            }
+            break;
         }
+            
+        case STOPPING:
+            if (walkAngle - glm::floor(walkAngle/(2*glm::pi<float>()))*2*glm::pi<float>() < 0.1f) {
+                currentState = IDLE;
+                walkAngle = 0.0f;
+                if (pendingJump) {
+                    currentState = JUMPING;
+                    jumpTimer = 0.0f;
+                    pendingJump = false;
+                }
+            } else {
+                animateWalk(adjustedDelta);
+            }
+            break;
+            
+        case IDLE:
+            break;
     }
 }

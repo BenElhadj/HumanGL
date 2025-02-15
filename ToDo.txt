@@ -1,0 +1,8 @@
+- quand j'appuis une fois sur j il saute une deuxieme fois pendant l'action il doit s'arreter et reprendre d'ou il s'est arreter si j'appuis une troisiemme fois
+- regler le faite que si j'appuis sur w puis espace puis j il termine son saut puis il reprend la marche alors qu'il ne dois pas reprendre la marche
+- ajouter l'annimation de mettre une pannier basket 
+- ameliorer l'affichage de personnage
+- - ajouter des articulation pour les pieds et les mains 
+- - changer l'apparence de la tete
+- - changer l'apparence de torso (le tronc)
+- - changer l'apparence des mombres (pieds et mains)
